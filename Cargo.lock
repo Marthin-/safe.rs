@@ -923,6 +923,11 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-ini"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -948,11 +953,11 @@ dependencies = [
  "json 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "jsonrpc-core 14.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.9.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rust-ini 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.103 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.42 (registry+https://github.com/rust-lang/crates.io-index)",
  "syspass_api 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "users 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1326,14 +1331,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "users"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "libc 0.2.66 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "uuid"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1526,6 +1523,7 @@ dependencies = [
 "checksum regex-syntax 0.6.12 (registry+https://github.com/rust-lang/crates.io-index)" = "11a7e20d1cce64ef2fed88b66d347f88bd9babb82845b2b858f3edbf59a4f716"
 "checksum remove_dir_all 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "4a83fa3702a688b9359eccba92d153ac33fd2e8462f9e0e3fdf155239ea7792e"
 "checksum reqwest 0.9.22 (registry+https://github.com/rust-lang/crates.io-index)" = "2c2064233e442ce85c77231ebd67d9eca395207dec2127fe0bbedde4bd29a650"
+"checksum rust-ini 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3e52c148ef37f8c375d49d5a73aa70713125b7f19095948a923f80afdeb22ec2"
 "checksum rustc-demangle 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)" = "4c691c0e608126e00913e33f0ccf3727d5fc84573623b8d65b2df340b5201783"
 "checksum rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
 "checksum ryu 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "bfa8506c1de11c9c4e4c38863ccbe02a305c8188e85a05a784c9e11e1c3910c8"
@@ -1569,7 +1567,6 @@ dependencies = [
 "checksum unicode-xid 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "826e7639553986605ec5979c7dd957c7895e93eabed50ab2ffa7f6128a75097c"
 "checksum url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "dd4e7c0d531266369519a4aa4f399d748bd37043b00bde1e4ff1f60a120b355a"
 "checksum url 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "75b414f6c464c879d7f9babf951f23bc3743fb7313c081b2e6ca719067ea9d61"
-"checksum users 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c72f4267aea0c3ec6d07eaabea6ead7c5ddacfafc5e22bcf8d186706851fb4cf"
 "checksum uuid 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)" = "90dbc611eb48397705a6b0f6e917da23ae517e4d127123d2cf7674206627d32a"
 "checksum vcpkg 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)" = "3fc439f2794e98976c88a2a2dafce96b930fe8010b0a256b3c2199a773933168"
 "checksum vec_map 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "05c78687fb1a80548ae3250346c3db86a80a7cdd77bda190189f2d0a0987c81a"
