@@ -3,18 +3,15 @@ extern crate syspass_api;
 
 #[macro_use]
 extern crate clap;
-use clap::{Arg, App};
+use clap::{App, Arg};
 
 extern crate ini;
 use ini::Ini;
 
-//use std::env;
+use std::fs::{copy, File};
+use std::io::{stdin, stdout, Error, Write};
 use std::path::Path;
 use std::process::exit;
-use std::io::{stdout, Error, Write, stdin};
-use std::fs::{File, copy};
-//use std::collections::HashMap;
-
 
 /*
 * Function that creates a credentials file usable by safers
@@ -23,7 +20,7 @@ use std::fs::{File, copy};
 *
 */
 
-fn init_new_credentials_file() -> Result<(),Error> {
+fn init_new_credentials_file() -> Result<(), Error> {
     let home = std::env::var("HOME").unwrap();
     let default_cred_file = format!("{}/.safersrc", home);
     println!("Initializing new credentials file now");
@@ -31,11 +28,11 @@ fn init_new_credentials_file() -> Result<(),Error> {
     print!("\nPlease enter destination file (empty for ~/.safersrc): ");
     stdout().flush()?;
     stdin().read_line(&mut dest_file).unwrap();
-    if dest_file.trim().is_empty(){
+    if dest_file.trim().is_empty() {
         dest_file = String::from(&default_cred_file);
         println!("dest file is {}", dest_file);
     }
-    if Path::new(&dest_file.trim()).exists(){
+    if Path::new(&dest_file.trim()).exists() {
         println!("This file already exists !");
         print!("Do you wish to overwrite it ? [y/n] ");
         stdout().flush()?;
@@ -73,12 +70,11 @@ fn init_new_credentials_file() -> Result<(),Error> {
 
 /********************************************************/
 
-fn main() -> Result<(), Error>{
-
-// A whole bunch of configuration reading, argument parsing, values initializing
+fn main() -> Result<(), Error> {
+    // A whole bunch of configuration reading, argument parsing, values initializing
 
     let matches = App::new("safers")
-        .version("0.1.0")
+        .version("0.1.6")
         .author("Martin Guilloux <martin.guilloux@protonmail.com>")
         .about("A Rust cli wrapper using syspass API")
         .arg(Arg::with_name("init-cred")
@@ -104,15 +100,13 @@ fn main() -> Result<(), Error>{
                  .long("credentials-file")
                  .takes_value(true)
                  .help("Specify which credentials file you want to use (usually contains API token)"))
-//        .arg(Arg::with_name("v")
-//                 .short("v")
-//                 .long("verbose")
-//                 .help("Enable verbose output"))
         .get_matches();
 
     let home = std::env::var("HOME").unwrap();
     let default_cred_file = format!("{}/.safersrc", home);
-    let myfile = matches.value_of("credentials-file").unwrap_or(&default_cred_file);
+    let myfile = matches
+        .value_of("credentials-file")
+        .unwrap_or(&default_cred_file);
 
     match matches.occurrences_of("init-cred") {
         0 => (),
@@ -121,43 +115,57 @@ fn main() -> Result<(), Error>{
         }
     }
 
-    if ! Path::new(myfile).exists(){
+    if !Path::new(myfile).exists() {
         println!("Config file does not exist!");
         print!("Please create it using --init-credentials-file option");
     }
 
-//    let mut verbose_mode = false;
+    //    let mut verbose_mode = false;
 
     let conf = Ini::load_from_file(myfile).unwrap();
 
-    let section = conf.section(Some("config".to_owned())).expect("Error with config file (whole file seems wrong)");
-    let request_url = section.get("request_url").expect("Error with config file (request_url seems wrong)");
-    let auth_token = section.get("auth_token").expect("Error with config file (auth_token seems wrong)");
-    
-/*    match matches.occurrences_of("v") {
-        0 => (),
-        1 | _ => {
-            println!("Verbose mode enabled");
-            verbose_mode = true
-        }
-    }
-*/
-// Real fun begins here
+    let section = conf
+        .section(Some("config".to_owned()))
+        .expect("Error with config file (whole file seems wrong)");
+    let request_url = section
+        .get("request_url")
+        .expect("Error with config file (request_url seems wrong)");
+    let auth_token = section
+        .get("auth_token")
+        .expect("Error with config file (auth_token seems wrong)");
+
+    // Real fun begins here
 
     let method = matches.value_of("method").unwrap_or("");
 
     if method != "" {
-       // let params_str: Vec<String> = values_t!(matches, "params", String).unwrap().collect();
         let mut params: Vec<String> = Vec::new();
         for param in values_t!(matches, "params", String).unwrap() {
             params.push(param);
         }
         syspass_api::forge_and_send(request_url, auth_token, "tag/search", params);
-
-    }
-    else {
+    } else {
         println!("[WIP] shell mode coming soon !");
+        println!("Use 'safers -h' to see help message");
+        loop {
+            print!("> ");
+            stdout().flush();
+
+            let mut input = String::new();
+            stdin().read_line(&mut input).unwrap();
+            let mut parts = input.trim().split_whitespace();
+            let command = parts.next().unwrap();
+            let args = parts;
+            let mut exit: bool = false;
+            match command {
+                "exit" => exit = true,
+                _ => println!("{}", command),
+            }
+            if exit == true {
+                return Ok(());
+            }
+        }
     }
-    
+
     Ok(())
 }
