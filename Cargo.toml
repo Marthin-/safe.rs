@@ -4,6 +4,8 @@ description = "A client / shell for syspass API implemented in Rust"
 version = "0.1.5"
 authors = ["Martin GUILLOUX <martin.guilloux@protonmail.com>"]
 edition = "2018"
+repository = "https://github.com/Marthin-/safe.rs"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
