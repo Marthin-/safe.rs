@@ -5,6 +5,9 @@ extern crate syspass_api;
 extern crate clap;
 use clap::{App, Arg};
 
+extern crate serde_json;
+use serde_json::{Value};
+
 extern crate ini;
 use ini::Ini;
 
@@ -143,7 +146,8 @@ fn main() -> Result<(), Error> {
         for param in values_t!(matches, "params", String).unwrap() {
             params.push(param);
         }
-        syspass_api::forge_and_send(request_url, auth_token, "tag/search", params);
+        let json_reply: Value = syspass_api::forge_and_send(request_url, auth_token, method, params);
+        println!("{}", json_reply);
     } else {
         println!("[WIP] shell mode coming soon !");
         println!("Use 'safers -h' to see help message");

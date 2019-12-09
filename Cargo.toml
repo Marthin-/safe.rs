@@ -12,5 +12,6 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 clap = "2.33.0"
-syspass_api= "0.1.4"
+syspass_api= "0.1.5"
 rust-ini = "0.13.0"
+serde_json = "1.0"
