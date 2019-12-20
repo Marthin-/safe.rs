@@ -1,5 +1,7 @@
 #![allow(unused_must_use)]
-extern crate syspass_api;
+#![allow(non_snake_case)]
+#![allow(unused_must_use)]
+//extern crate syspass_api;
 
 #[macro_use]
 extern crate clap;
@@ -11,13 +13,143 @@ use serde_json::{Value};
 extern crate ini;
 use ini::Ini;
 
+extern crate rpassword;
+use rpassword::read_password;
+
 use std::fs::{copy, File};
 use std::io::{stdin, stdout, Error, Write};
 use std::path::Path;
 use std::process::exit;
 
-static ALL_METHODS: [&'static str; 29] = ["account/search", "account/view", "account/viewPass", "account/editPass", "account/create", "account/edit", "account/delete", "category/search", "category/view", "category/create", "category/edit", "category/delete", "client/search", "client/view", "client/create", "client/edit", "client/delete", "tag/search", "tag/view", "tag/create", "tag/edit", "tag/delete", "usergroup/search", "usergroup/view", "usergroup/create", "usergroup/edit", "usergroup/delete", "config/backup", "config/export"];
+//////////////////////////////////
+//      SYSPASS_API LIB         //
+//////////////////////////////////
 
+extern crate json;
+extern crate reqwest;
+#[macro_use]
+extern crate serde_derive;
+//use serde_json::{Value};
+use std::collections::HashMap;
+
+
+/*
+* Struct used to store parts of the json request
+*/
+#[derive(Deserialize, Debug, Serialize)]
+pub struct JsonReq {
+    jsonrpc: String,
+    method: String,
+    params: HashMap<String, String>,
+    id: u8,
+}
+
+#[derive(Deserialize, Debug, Serialize)]
+pub struct APIResult {
+    count: Option<u8>,
+    itemId: Option<u16>,
+    result: Value,
+}
+
+
+#[derive(Deserialize, Debug, Serialize)]
+pub struct APIOutput {
+    id: u8,
+    jsonrpc: String,
+    result: APIResult,
+//    resultCode: Option<u16>,
+//    resultMessage: Option<String>,
+}
+
+/* create return example
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "itemId": 13,
+    "result": {
+      "id": 13,
+      "userId": 1,
+      "userGroupId": 1,
+      "userEditId": 1,
+      "name": "platypus",
+      "clientId": 7,
+      "categoryId": 1,
+      "login": "",
+      "url": "",
+      "pass": "",
+      "key": "",
+      "notes": "",
+      "otherUserEdit": "0",
+      "otherUserGroupEdit": "0",
+      "dateAdd": "2019-12-15 14:34:05",
+      "dateEdit": null,
+      "countView": 0,
+      "countDecrypt": 0,
+      "isPrivate": "0",
+      "isPrivateGroup": "0",
+      "passDate": 1576416845,
+      "passDateChange": 0,
+      "parentId": 0,
+      "categoryName": "web",
+      "clientName": "toto",
+      "userGroupName": "Admins",
+      "userName": "sysPass Admin",
+      "userLogin": "admin",
+      "userEditName": "sysPass Admin",
+      "userEditLogin": "admin",
+      "publicLinkHash": null
+    },
+    "resultCode": 0,
+    "resultMessage": "Compte ajouté",
+    "count": null
+  },
+  "id": 1
+}
+*/
+
+/*
+* Send a json request to given url 
+*/
+fn send_request(request_url: &str, req: &JsonReq) -> APIOutput {
+    let mut response = reqwest::Client::new()
+        .post(request_url)
+        .json(&req)
+        .send().unwrap();
+
+    let out_text = response.text().unwrap();
+    let out_slice = out_text.as_str();
+//    let out_json: Value = serde_json::from_str(&out_slice).unwrap();
+//    out_json
+    let api_return: APIOutput = serde_json::from_str(&out_slice).unwrap();
+    api_return
+}
+
+/*
+* Forge a request with arguments and
+* send it at the same time : EPIC
+*/
+pub fn forge_and_send(request_url: &str, auth_token: &str, method: &str, args: Vec<String>) -> APIOutput {
+    let mut params_hm: HashMap<String, String> = HashMap::new();
+    params_hm.insert("authToken".to_string(), auth_token.to_string());
+    for arg in args.iter() {
+        let split = arg.split("=");
+        let vec: Vec<&str> = split.collect();
+            if vec.len() > 1 {
+            params_hm.insert(vec[0].to_string(), vec[1].to_string());
+        }
+    }
+    let req = JsonReq{jsonrpc: String::from("2.0"), method: method.to_string(), params: params_hm, id: 1,};
+    let reply_json: APIOutput = send_request(&request_url, &req);
+    reply_json
+}
+
+
+
+//////////////////////////////////
+
+
+
+static ALL_METHODS: [&'static str; 29] = ["account/search", "account/view", "account/viewPass", "account/editPass", "account/create", "account/edit", "account/delete", "category/search", "category/view", "category/create", "category/edit", "category/delete", "client/search", "client/view", "client/create", "client/edit", "client/delete", "tag/search", "tag/view", "tag/create", "tag/edit", "tag/delete", "usergroup/search", "usergroup/view", "usergroup/create", "usergroup/edit", "usergroup/delete", "config/backup", "config/export"];
 
 /********************************************************/
 
@@ -116,8 +248,9 @@ fn main() -> Result<(), Error> {
         for param in values_t!(matches, "params", String).unwrap() {
             params.push(param);
         }
-        let json_reply: Value = syspass_api::forge_and_send(request_url, auth_token, method, params);
-        println!("{}", json_reply);
+//        let api_reply: syspass_api::APIOutput = syspass_api::forge_and_send(request_url, auth_token, method, params);
+        let api_reply: APIOutput = forge_and_send(request_url, auth_token, method, params);
+        println!("{:#?}", api_reply);
     } else {
         println!("[WIP] shell mode coming soon !");
         println!("Use 'safers -h' to see help message");
@@ -143,7 +276,11 @@ fn main() -> Result<(), Error> {
                 "help" => {
                     app2.print_long_help();
                     ()
-                }
+                },
+                "account" => {
+                    account_mode();
+                    ()
+                },
                 _ => {
                     println!("{}", command);
                 },
@@ -212,5 +349,102 @@ fn init_new_credentials_file() -> Result<(), Error> {
 
     Ok(())
 }
+
+/*****************************************/
+
+/*
+* A bunch of useful commands to administrate syspass easily
+*
+*/
+
+fn create_account() { //-> APIOutput {
+    print!("ACCOUNT CREATE MODE\n\
+            account name: ");
+    stdout().flush();
+    let mut account_name = String::new();
+    stdin().read_line(&mut account_name).unwrap();
+    //TODO: search if user already exists
+    let mut category_id = String::new(); //TODO: search for existing categories and print their ID
+    print!("categoryId: ");
+    stdout().flush();
+    stdin().read_line(&mut category_id).unwrap();
+    let mut client_id = String::new(); //TODO: search for existing clients and print their ID
+    print!("clientId: ");
+    stdout().flush();
+    stdin().read_line(&mut client_id).unwrap();
+    print!("pass: ");
+    stdout().flush();
+    let pass = rpassword::read_password().unwrap();
+    println!("{} {} {} {}", account_name, category_id, client_id, pass);
+//    stdin().read_line(&pass).unwrap();
+
+
+}
+
+fn search_account(){
+    println!("TO BE IMPLEMENTED");
+}
+
+fn account_mode(){
+    loop {
+        print!("account > ");
+        stdout().flush();
+
+        let mut input = String::new();
+        stdin().read_line(&mut input).unwrap(); 
+        if input == "" {
+            input = String::from("exit");
+        }
+        if input.trim() == "" {
+            // We eliminated the case for ctrl-D, now just loop over
+            continue;
+        }
+        let mut parts = input.trim().split_whitespace();
+        let command = parts.next().unwrap();
+        let args = parts;
+        let mut exit: bool = false;
+        let mut up: bool = false;
+        match command {
+            "up" => up = true,
+            "exit" => exit = true,
+            "help" => {
+                ()
+            },
+            "create" => {
+                create_account();
+                ()
+            },
+            "search" => {
+                search_account();
+                ()
+            },
+            _ => {
+                println!("{}", command);
+            },
+        }
+        if exit == true || up == true {
+            println!("");
+            return
+            //return Ok(());
+        }
+    }
+}
+
+/*authToken 	string 	yes 	User’s API token
+tokenPass 	string 	yes 	API token’s pass
+name 	string 	yes 	Account’s name
+categoryId 	int 	yes 	Account’s category Id
+clientId 	int 	yes 	Account’s client Id
+pass 	string 	yes 	Account’s password
+tagsId 	array 	no 	Account’s tags Id
+userGroupId 	int 	no 	Account’s user group Id
+parentId 	int 	no 	Account’s parent Id
+login 	string 	no 	Account’s login
+url 	string 	no 	Account’s access URL or IP
+notes 	string 	no 	Account’s notes
+private 	int 	no 	Set account as private. It can be either 0 or 1
+privateGroup 	int 	no 	Set account as private for group. It can be either 0 or 1
+expireDate 	int 	no 	Expire date in UNIX timestamp format
+*/
 
 /*****************************************/
